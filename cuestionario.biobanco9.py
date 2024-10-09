@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime
-from filelock import FileLock  # Importar FileLock
+from filelock import FileLock
 import smtplib
 import ssl
 from email.mime.text import MIMEText
@@ -14,14 +14,14 @@ st.image("escudo_COLOR.jpg", width=100)
 
 # Archivo Excel donde se acumularán todas las respuestas
 acumulado_excel_file = 'respuestas_cuestionario_acumulado.xlsx'
-lock_file = 'acumulado_excel_file.lock'  # Archivo de bloqueo
+lock_file = 'acumulado_excel_file.lock'
 
 # Función para enviar el correo electrónico
 def enviar_correo(destinatario, nombre, archivo_adjunto):
     smtp_server = "smtp.gmail.com"
-    port = 587  # Puerto para usar TLS
+    port = 587
     remitente = "abcdf2024dfabc@gmail.com"
-    password = "hjdd gqaw vvpj hbsy"  # Tu contraseña de aplicación
+    password = "hjdd gqaw vvpj hbsy"
 
     mensaje = MIMEMultipart()
     mensaje['From'] = remitente
@@ -40,20 +40,18 @@ Instituto Nacional de Cardiología Ignacio Chávez
 """
     mensaje.attach(MIMEText(cuerpo, 'plain', 'utf-8'))
 
-    # Adjuntar el archivo proporcionado (en este caso, Excel)
     with open(archivo_adjunto, 'rb') as attachment:
         part = MIMEApplication(attachment.read(), _subtype='vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         part.add_header('Content-Disposition', 'attachment', filename=os.path.basename(archivo_adjunto))
         mensaje.attach(part)
 
-    # Establecer conexión segura con el servidor SMTP
     context = ssl.create_default_context()
 
     try:
         with smtplib.SMTP(smtp_server, port) as server:
-            server.starttls(context=context)  # Iniciar una conexión segura
-            server.login(remitente, password)  # Autenticarse en el servidor
-            server.sendmail(remitente, destinatario, mensaje.as_string())  # Enviar el correo
+            server.starttls(context=context)
+            server.login(remitente, password)
+            server.sendmail(remitente, destinatario, mensaje.as_string())
         return True
     except Exception as e:
         st.error(f"Error al enviar el correo: {e}")
@@ -77,7 +75,7 @@ st.title('Cuestionario Paciente - BioBanco')
 with st.form(key='cuestionario_form'):
     # Pregunta 1: Fecha de entrevista
     fecha_entrevista = st.date_input('Fecha de entrevista', value=datetime.now())
-    responses['Fecha de entrevista'] = fecha_entrevista.strftime('%d/%m/%Y')  # Guardar solo la fecha
+    responses['Fecha de entrevista'] = fecha_entrevista.strftime('%d/%m/%Y')
 
     # Pregunta 2: Procedencia del paciente
     responses['Procedencia del paciente'] = st.selectbox(
@@ -92,7 +90,7 @@ with st.form(key='cuestionario_form'):
         ]
     )
 
-    # Pregunta 3: Núm. registro INCICh (numérico)
+    # Pregunta 3: Núm. registro INCICh
     num_registro = st.text_input('Núm. registro INCICh')
     if not num_registro.isdigit():
         st.error('El número de expediente debe ser un valor numérico.')
@@ -104,13 +102,29 @@ with st.form(key='cuestionario_form'):
 
     # Pregunta 5: Fecha de nacimiento
     fecha_nacimiento = st.date_input('Fecha de nacimiento', min_value=datetime(1920, 1, 1), max_value=datetime.now())
-    responses['Fecha de nacimiento'] = fecha_nacimiento.strftime('%d/%m/%Y')  # Guardar solo la fecha
+    responses['Fecha de nacimiento'] = fecha_nacimiento.strftime('%d/%m/%Y')
 
     # Pregunta 6: Edad actual (años)
     responses['Edad actual (años)'] = st.number_input('Edad actual (años)', min_value=0, max_value=120, step=1)
 
     # Pregunta 7: Género
     responses['Género'] = st.selectbox('Género', ['Masculino', 'Femenino', 'Otro'])
+
+    # Pregunta 8: Peso (Kg)
+    peso = st.number_input('Peso (Kg)', min_value=0.0, max_value=999.9, step=0.1, format="%.1f")
+    responses['Peso (Kg)'] = peso
+
+    # Pregunta 9: Estatura (m)
+    estatura = st.number_input('Estatura (m)', min_value=0.0, max_value=9.99, step=0.01, format="%.2f")
+    responses['Estatura (m)'] = estatura
+
+    # Pregunta 10: Índice de masa corporal (IMC)
+    if estatura > 0:
+        imc = round(peso / (estatura ** 2), 1)
+    else:
+        imc = 0.0
+    st.error('El IMC se calcula y se graba en el registro pero no se muestra.')
+    responses['Índice de masa corporal (IMC)'] = imc
 
     # Pregunta 11: Circunferencia de cintura (cm)
     responses['Circunferencia de cintura (cm)'] = st.number_input('Circunferencia de cintura (cm)', min_value=0.0, max_value=999.9, step=0.1, format="%.1f")
@@ -124,7 +138,7 @@ with st.form(key='cuestionario_form'):
     # Pregunta 14: Frecuencia cardiaca (lpm)
     responses['Frecuencia cardiaca (lpm)'] = st.number_input('Frecuencia cardiaca (lpm)', min_value=0, max_value=999, step=1)
 
-    # Pregunta 15: Grupo étnico al que pertenece.
+    # Pregunta 15: Grupo étnico al que pertenece
     responses['Grupo étnico al que pertenece.'] = st.selectbox('Grupo étnico al que pertenece.', ['Mestizo', 'Pueblo indígena', 'Caucásico', 'Afrodescendiente'])
 
     # Pregunta 16: ¿Dónde nacieron sus abuelos Maternos?
@@ -191,86 +205,54 @@ with st.form(key='cuestionario_form'):
     email = st.text_input('Proporcione el correo electrónico del donante:')
     responses['Correo electrónico'] = email
 
-    # Pregunta 8: Peso (Kg)
-    peso = st.number_input('Peso (Kg)', min_value=0.0, max_value=999.9, step=0.1, format="%.1f")
-    responses['Peso (Kg)'] = peso
-
-    # Pregunta 9: Estatura (m)
-    estatura = st.number_input('Estatura (m)', min_value=0.0, max_value=9.99, step=0.01, format="%.2f")
-    responses['Estatura (m)'] = estatura
-
-    # Pregunta 10: Índice de masa corporal (IMC)
-    if estatura > 0:
-        imc = round(peso / (estatura ** 2), 1)
-    else:
-        imc = 0.0
-
-    # Mostrar el IMC calculado en tiempo real
-    st.write(f"Su Índice de Masa Corporal (IMC) es: {imc}")
-
-    # Guardar la respuesta en el diccionario
-    responses['Índice de masa corporal (IMC)'] = imc
-
     # Botón para enviar las respuestas
     submit_button = st.form_submit_button(label='Guardar Respuestas')
+    # Botón para salir sin guardar
+    cancel_button = st.form_submit_button(label='Salir sin Guardar')
 
 # Al hacer clic en "Guardar Respuestas"
 if submit_button:
-    # Verificar que el número de expediente sea numérico antes de continuar
     if not num_registro.isdigit():
         st.error('El número de expediente debe ser un valor numérico.')
     else:
-        # Verificar que todas las respuestas hayan sido completadas
         if '' in responses.values() or any(pd.isna(val) for val in responses.values()):
             st.error('Por favor, responda todas las preguntas antes de guardar.')
         else:
-            # Convertir las respuestas a un DataFrame
             responses_df = pd.DataFrame([responses])
-
-            # Crear el archivo individual para el usuario actual
             individual_excel_file = f'registro_{responses["Núm. registro INCICh"]}.xlsx'
             responses_df.to_excel(individual_excel_file, index=False)
 
-            # Usar FileLock para bloquear el acceso al archivo acumulado
             with FileLock(lock_file):
-                # Verificar si ya existe el archivo acumulado
                 if os.path.exists(acumulado_excel_file):
-                    # Cargar el archivo existente
                     existing_data = pd.read_excel(acumulado_excel_file)
-
-                    # Eliminar columnas duplicadas si existen
                     existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
-
-                    # Concatenar los datos
                     new_data = pd.concat([existing_data, responses_df], ignore_index=True)
-
-                    # Reordenar las columnas para que 'Fecha de entrevista' y 'Nombre del paciente' estén al inicio
                     columns_order = ['Fecha de entrevista', 'Nombre del paciente'] + [col for col in new_data.columns if col not in ['Fecha de entrevista', 'Nombre del paciente']]
                     new_data = new_data[columns_order]
-
                 else:
-                    # Si no existe, usar las nuevas respuestas como base
                     new_data = responses_df
-
-                # Guardar las respuestas en el archivo acumulado
                 new_data.to_excel(acumulado_excel_file, index=False, engine='openpyxl')
                 st.success('Las respuestas han sido guardadas exitosamente.')
 
-            # Enviar el cuestionario individual al correo electrónico proporcionado
-            if email and 'Nombre del paciente' in responses:
+            # Validar el correo 'polanco@unam.mx' y mostrar el botón de descarga
+            if email.strip().lower() == 'polanco@unam.mx':
+                st.success('Correo electrónico validado: polanco@unam.mx')
+                with open(acumulado_excel_file, 'rb') as file:
+                    st.download_button(
+                        label='Descargar archivo Excel acumulado',
+                        data=file,
+                        file_name=acumulado_excel_file,
+                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    )
+
+            if email and 'Nombre del paciente' in responses and email.strip().lower() != 'polanco@unam.mx':
                 if enviar_correo(email, responses['Nombre del paciente'], individual_excel_file):
                     st.success('El cuestionario ha sido enviado al correo electrónico proporcionado.')
                 else:
                     st.error('No se pudo enviar el correo. Verifique la dirección de correo e inténtelo de nuevo.')
 
-# Mostrar el botón de "Extraer archivos" si el correo electrónico es "polanco@unam.mx"
-if email.strip().lower() == 'polanco@unam.mx':
-    st.success('Correo electrónico validado: polanco@unam.mx')
-    with open(acumulado_excel_file, 'rb') as file:
-        st.download_button(
-            label='Descargar archivo Excel acumulado',
-            data=file,
-            file_name=acumulado_excel_file,
-            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
+# Al hacer clic en "Salir sin Guardar"
+if cancel_button:
+    st.warning('Para salir sin guardar cierre la aplicación.')
+    st.stop()  # Detiene la ejecución del programa
 
