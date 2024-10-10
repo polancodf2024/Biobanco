@@ -59,7 +59,7 @@ Instituto Nacional de Cardiología Ignacio Chávez
 
 # Lista de estados de la República Mexicana
 estados_mexico = [
-    'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche', 'Chiapas', 'Chihuahua', 'Ciudad de Mexico',
+    'Otro', 'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche', 'Chiapas', 'Chihuahua', 'Ciudad de Mexico',
     'Coahuila', 'Colima', 'Durango', 'Estado de Mexico', 'Guanajuato', 'Guerrero', 'Hidalgo', 'Jalisco', 'Michoacan',
     'Morelos', 'Nayarit', 'Nuevo Leon', 'Oaxaca', 'Puebla', 'Queretaro', 'Quintana Roo', 'San Luis Potosi', 'Sinaloa',
     'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatan', 'Zacatecas'
@@ -104,8 +104,13 @@ with st.form(key='cuestionario_form'):
     fecha_nacimiento = st.date_input('Fecha de nacimiento', min_value=datetime(1920, 1, 1), max_value=datetime.now())
     responses['Fecha de nacimiento'] = fecha_nacimiento.strftime('%d/%m/%Y')
 
-    # Pregunta 6: Edad actual (años)
-    responses['Edad actual (años)'] = st.number_input('Edad actual (años)', min_value=0, max_value=120, step=1)
+    # Cálculo de la edad
+    hoy = datetime.now()
+    edad = hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
+    responses['Edad actual (años)'] = edad
+
+#    # Pregunta 6: Edad actual (años)
+#    responses['Edad actual (años)'] = st.number_input('Edad actual (años)', min_value=0, max_value=120, step=1)
 
     # Pregunta 7: Género
     responses['Género'] = st.selectbox('Género', ['Masculino', 'Femenino', 'Otro'])
@@ -123,7 +128,7 @@ with st.form(key='cuestionario_form'):
         imc = round(peso / (estatura ** 2), 1)
     else:
         imc = 0.0
-    st.error('El IMC se calcula y se graba en el registro pero no se muestra.')
+#    st.error('El IMC se calcula y se graba en el registro pero no se muestra.')
     responses['Índice de masa corporal (IMC)'] = imc
 
     # Pregunta 11: Circunferencia de cintura (cm)
@@ -139,16 +144,25 @@ with st.form(key='cuestionario_form'):
     responses['Frecuencia cardiaca (lpm)'] = st.number_input('Frecuencia cardiaca (lpm)', min_value=0, max_value=999, step=1)
 
     # Pregunta 15: Grupo étnico al que pertenece
-    responses['Grupo étnico al que pertenece.'] = st.selectbox('Grupo étnico al que pertenece.', ['Mestizo', 'Pueblo indígena', 'Caucásico', 'Afrodescendiente'])
+    responses['Grupo étnico al que pertenece.'] = st.selectbox('Grupo étnico al que pertenece.', ['Otro', 'Mestizo', 'Pueblo indígena', 'Caucásico', 'Afrodescendiente'])
 
-    # Pregunta 16: ¿Dónde nacieron sus abuelos Maternos?
-    responses['¿Dónde nacieron sus abuelos Maternos?'] = st.selectbox('¿Dónde nacieron sus abuelos Maternos?', estados_mexico)
+    # Pregunta 16: ¿Dónde nació su abuelo materno?
+    responses['¿Dónde nació su abuelo materno?'] = st.selectbox('¿Dónde nació su abuelo materno?', estados_mexico)
 
-    # Pregunta 17: ¿Dónde nacieron sus abuelos Paternos?
-    responses['¿Dónde nacieron sus abuelos Paternos?'] = st.selectbox('¿Dónde nacieron sus abuelos Paternos?', estados_mexico)
+    # Pregunta 16.1: ¿Dónde nació su abuela materna?
+    responses['¿Dónde nació su abuela materna?'] = st.selectbox('¿Dónde nació su abuela materna?', estados_mexico)
 
-    # Pregunta 18: ¿Dónde nacieron sus padres?
-    responses['¿Dónde nacieron sus padres?'] = st.selectbox('¿Dónde nacieron sus padres?', estados_mexico)
+    # Pregunta 17: ¿Dónde nació su abuelo paterno?
+    responses['¿Dónde nació su abuelo paterno?'] = st.selectbox('¿Dónde nació su abuelo paterno?', estados_mexico)
+
+    # Pregunta 17.1: ¿Dónde nació su abuela paterna?
+    responses['¿Dónde nació su abuela paterna?'] = st.selectbox('¿Dónde nació su abuela paterna?', estados_mexico)
+
+    # Pregunta 18: ¿Dónde nació su padre?
+    responses['¿Dónde nació su padre?'] = st.selectbox('¿Dónde nació su padre?', estados_mexico)
+
+    # Pregunta 18.1: ¿Dónde nació su madre?
+    responses['¿Dónde nació su madre?'] = st.selectbox('¿Dónde nació su madre?', estados_mexico)
 
     # Pregunta 19: ¿Dónde nació usted?
     responses['¿Dónde nació usted?'] = st.selectbox('¿Dónde nació usted?', estados_mexico)
@@ -172,8 +186,14 @@ with st.form(key='cuestionario_form'):
         'En los últimos 3 meses ¿ha consumido alguna bebida que contenga alcohol?', ['Sí', 'No', 'No sabe']
     )
 
+#    # Pregunta 24: ¿El paciente tiene exceso de peso?
+#    responses['¿El paciente tiene exceso de peso?'] = st.selectbox('¿El paciente tiene exceso de peso?', ['Sí', 'No', 'No sabe'])
+
     # Pregunta 24: ¿El paciente tiene exceso de peso?
-    responses['¿El paciente tiene exceso de peso?'] = st.selectbox('¿El paciente tiene exceso de peso?', ['Sí', 'No', 'No sabe'])
+    if imc > 25:
+        responses['¿El paciente tiene exceso de peso?'] = 'Sí'
+    else:
+        responses['¿El paciente tiene exceso de peso?'] = 'No'
 
     # Pregunta 25: ¿El paciente tiene diabetes?
     responses['¿El paciente tiene diabetes?'] = st.selectbox('¿El paciente tiene diabetes?', ['Sí', 'No', 'No sabe'])
