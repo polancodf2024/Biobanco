@@ -218,8 +218,8 @@ with st.form(key='cuestionario_form'):
     # Genera la identificación con el prefijo correspondiente
     identificacion = generar_identificacion(prefijo)
 
-    if responses['Procedencia del paciente'] == 'Donador Control':
-        st.write(f"ID generado: {identificacion}")
+#    if responses['Procedencia del paciente'] == 'Donador Control':
+    st.write(f"ID generado: {identificacion}")
 
 
 
